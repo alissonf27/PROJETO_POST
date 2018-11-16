@@ -6,6 +6,7 @@
 package Controller;
 
 import Controller.exceptions.NonexistentEntityException;
+import Controller.exceptions.PreexistingEntityException;
 import Entidades.Role;
 import java.io.Serializable;
 import javax.persistence.Query;
@@ -34,7 +35,7 @@ public class RoleJpaController implements Serializable {
         return emf.createEntityManager();
     }
 
-    public void create(Role role) {
+    public void create(Role role) throws PreexistingEntityException, Exception {
         if (role.getUserCollection() == null) {
             role.setUserCollection(new ArrayList<User>());
         }
@@ -44,21 +45,26 @@ public class RoleJpaController implements Serializable {
             em.getTransaction().begin();
             Collection<User> attachedUserCollection = new ArrayList<User>();
             for (User userCollectionUserToAttach : role.getUserCollection()) {
-                userCollectionUserToAttach = em.getReference(userCollectionUserToAttach.getClass(), userCollectionUserToAttach.getIduser());
+                userCollectionUserToAttach = em.getReference(userCollectionUserToAttach.getClass(), userCollectionUserToAttach.getIdUser());
                 attachedUserCollection.add(userCollectionUserToAttach);
             }
             role.setUserCollection(attachedUserCollection);
             em.persist(role);
             for (User userCollectionUser : role.getUserCollection()) {
-                Role oldRoleOfUserCollectionUser = userCollectionUser.getRole();
-                userCollectionUser.setRole(role);
+                Role oldIdRoleOfUserCollectionUser = userCollectionUser.getIdRole();
+                userCollectionUser.setIdRole(role);
                 userCollectionUser = em.merge(userCollectionUser);
-                if (oldRoleOfUserCollectionUser != null) {
-                    oldRoleOfUserCollectionUser.getUserCollection().remove(userCollectionUser);
-                    oldRoleOfUserCollectionUser = em.merge(oldRoleOfUserCollectionUser);
+                if (oldIdRoleOfUserCollectionUser != null) {
+                    oldIdRoleOfUserCollectionUser.getUserCollection().remove(userCollectionUser);
+                    oldIdRoleOfUserCollectionUser = em.merge(oldIdRoleOfUserCollectionUser);
                 }
             }
             em.getTransaction().commit();
+        } catch (Exception ex) {
+            if (findRole(role.getIdRole()) != null) {
+                throw new PreexistingEntityException("Role " + role + " already exists.", ex);
+            }
+            throw ex;
         } finally {
             if (em != null) {
                 em.close();
@@ -71,12 +77,12 @@ public class RoleJpaController implements Serializable {
         try {
             em = getEntityManager();
             em.getTransaction().begin();
-            Role persistentRole = em.find(Role.class, role.getIdrole());
+            Role persistentRole = em.find(Role.class, role.getIdRole());
             Collection<User> userCollectionOld = persistentRole.getUserCollection();
             Collection<User> userCollectionNew = role.getUserCollection();
             Collection<User> attachedUserCollectionNew = new ArrayList<User>();
             for (User userCollectionNewUserToAttach : userCollectionNew) {
-                userCollectionNewUserToAttach = em.getReference(userCollectionNewUserToAttach.getClass(), userCollectionNewUserToAttach.getIduser());
+                userCollectionNewUserToAttach = em.getReference(userCollectionNewUserToAttach.getClass(), userCollectionNewUserToAttach.getIdUser());
                 attachedUserCollectionNew.add(userCollectionNewUserToAttach);
             }
             userCollectionNew = attachedUserCollectionNew;
@@ -84,18 +90,18 @@ public class RoleJpaController implements Serializable {
             role = em.merge(role);
             for (User userCollectionOldUser : userCollectionOld) {
                 if (!userCollectionNew.contains(userCollectionOldUser)) {
-                    userCollectionOldUser.setRole(null);
+                    userCollectionOldUser.setIdRole(null);
                     userCollectionOldUser = em.merge(userCollectionOldUser);
                 }
             }
             for (User userCollectionNewUser : userCollectionNew) {
                 if (!userCollectionOld.contains(userCollectionNewUser)) {
-                    Role oldRoleOfUserCollectionNewUser = userCollectionNewUser.getRole();
-                    userCollectionNewUser.setRole(role);
+                    Role oldIdRoleOfUserCollectionNewUser = userCollectionNewUser.getIdRole();
+                    userCollectionNewUser.setIdRole(role);
                     userCollectionNewUser = em.merge(userCollectionNewUser);
-                    if (oldRoleOfUserCollectionNewUser != null && !oldRoleOfUserCollectionNewUser.equals(role)) {
-                        oldRoleOfUserCollectionNewUser.getUserCollection().remove(userCollectionNewUser);
-                        oldRoleOfUserCollectionNewUser = em.merge(oldRoleOfUserCollectionNewUser);
+                    if (oldIdRoleOfUserCollectionNewUser != null && !oldIdRoleOfUserCollectionNewUser.equals(role)) {
+                        oldIdRoleOfUserCollectionNewUser.getUserCollection().remove(userCollectionNewUser);
+                        oldIdRoleOfUserCollectionNewUser = em.merge(oldIdRoleOfUserCollectionNewUser);
                     }
                 }
             }
@@ -103,7 +109,7 @@ public class RoleJpaController implements Serializable {
         } catch (Exception ex) {
             String msg = ex.getLocalizedMessage();
             if (msg == null || msg.length() == 0) {
-                Integer id = role.getIdrole();
+                Integer id = role.getIdRole();
                 if (findRole(id) == null) {
                     throw new NonexistentEntityException("The role with id " + id + " no longer exists.");
                 }
@@ -124,13 +130,13 @@ public class RoleJpaController implements Serializable {
             Role role;
             try {
                 role = em.getReference(Role.class, id);
-                role.getIdrole();
+                role.getIdRole();
             } catch (EntityNotFoundException enfe) {
                 throw new NonexistentEntityException("The role with id " + id + " no longer exists.", enfe);
             }
             Collection<User> userCollection = role.getUserCollection();
             for (User userCollectionUser : userCollection) {
-                userCollectionUser.setRole(null);
+                userCollectionUser.setIdRole(null);
                 userCollectionUser = em.merge(userCollectionUser);
             }
             em.remove(role);

@@ -12,6 +12,10 @@ import javax.persistence.EntityNotFoundException;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import Entidades.Role;
+import Entidades.Assinatura;
+import java.util.ArrayList;
+import java.util.Collection;
+import Entidades.Post;
 import Entidades.User;
 import java.util.List;
 import javax.persistence.EntityManager;
@@ -33,19 +37,55 @@ public class UserJpaController implements Serializable {
     }
 
     public void create(User user) {
+        if (user.getAssinaturaCollection() == null) {
+            user.setAssinaturaCollection(new ArrayList<Assinatura>());
+        }
+        if (user.getPostCollection() == null) {
+            user.setPostCollection(new ArrayList<Post>());
+        }
         EntityManager em = null;
         try {
             em = getEntityManager();
             em.getTransaction().begin();
-            Role role = user.getRole();
-            if (role != null) {
-                role = em.getReference(role.getClass(), role.getIdrole());
-                user.setRole(role);
+            Role idRole = user.getIdRole();
+            if (idRole != null) {
+                idRole = em.getReference(idRole.getClass(), idRole.getIdRole());
+                user.setIdRole(idRole);
             }
+            Collection<Assinatura> attachedAssinaturaCollection = new ArrayList<Assinatura>();
+            for (Assinatura assinaturaCollectionAssinaturaToAttach : user.getAssinaturaCollection()) {
+                assinaturaCollectionAssinaturaToAttach = em.getReference(assinaturaCollectionAssinaturaToAttach.getClass(), assinaturaCollectionAssinaturaToAttach.getIdAssinatura());
+                attachedAssinaturaCollection.add(assinaturaCollectionAssinaturaToAttach);
+            }
+            user.setAssinaturaCollection(attachedAssinaturaCollection);
+            Collection<Post> attachedPostCollection = new ArrayList<Post>();
+            for (Post postCollectionPostToAttach : user.getPostCollection()) {
+                postCollectionPostToAttach = em.getReference(postCollectionPostToAttach.getClass(), postCollectionPostToAttach.getIdPost());
+                attachedPostCollection.add(postCollectionPostToAttach);
+            }
+            user.setPostCollection(attachedPostCollection);
             em.persist(user);
-            if (role != null) {
-                role.getUserCollection().add(user);
-                role = em.merge(role);
+            if (idRole != null) {
+                idRole.getUserCollection().add(user);
+                idRole = em.merge(idRole);
+            }
+            for (Assinatura assinaturaCollectionAssinatura : user.getAssinaturaCollection()) {
+                User oldIdUserOfAssinaturaCollectionAssinatura = assinaturaCollectionAssinatura.getIdUser();
+                assinaturaCollectionAssinatura.setIdUser(user);
+                assinaturaCollectionAssinatura = em.merge(assinaturaCollectionAssinatura);
+                if (oldIdUserOfAssinaturaCollectionAssinatura != null) {
+                    oldIdUserOfAssinaturaCollectionAssinatura.getAssinaturaCollection().remove(assinaturaCollectionAssinatura);
+                    oldIdUserOfAssinaturaCollectionAssinatura = em.merge(oldIdUserOfAssinaturaCollectionAssinatura);
+                }
+            }
+            for (Post postCollectionPost : user.getPostCollection()) {
+                User oldIdAuthorOfPostCollectionPost = postCollectionPost.getIdAuthor();
+                postCollectionPost.setIdAuthor(user);
+                postCollectionPost = em.merge(postCollectionPost);
+                if (oldIdAuthorOfPostCollectionPost != null) {
+                    oldIdAuthorOfPostCollectionPost.getPostCollection().remove(postCollectionPost);
+                    oldIdAuthorOfPostCollectionPost = em.merge(oldIdAuthorOfPostCollectionPost);
+                }
             }
             em.getTransaction().commit();
         } finally {
@@ -60,27 +100,83 @@ public class UserJpaController implements Serializable {
         try {
             em = getEntityManager();
             em.getTransaction().begin();
-            User persistentUser = em.find(User.class, user.getIduser());
-            Role roleOld = persistentUser.getRole();
-            Role roleNew = user.getRole();
-            if (roleNew != null) {
-                roleNew = em.getReference(roleNew.getClass(), roleNew.getIdrole());
-                user.setRole(roleNew);
+            User persistentUser = em.find(User.class, user.getIdUser());
+            Role idRoleOld = persistentUser.getIdRole();
+            Role idRoleNew = user.getIdRole();
+            Collection<Assinatura> assinaturaCollectionOld = persistentUser.getAssinaturaCollection();
+            Collection<Assinatura> assinaturaCollectionNew = user.getAssinaturaCollection();
+            Collection<Post> postCollectionOld = persistentUser.getPostCollection();
+            Collection<Post> postCollectionNew = user.getPostCollection();
+            if (idRoleNew != null) {
+                idRoleNew = em.getReference(idRoleNew.getClass(), idRoleNew.getIdRole());
+                user.setIdRole(idRoleNew);
             }
-            user = em.merge(user);
-            if (roleOld != null && !roleOld.equals(roleNew)) {
-                roleOld.getUserCollection().remove(user);
-                roleOld = em.merge(roleOld);
-            }
-            if (roleNew != null && !roleNew.equals(roleOld)) {
-                roleNew.getUserCollection().add(user);
-                roleNew = em.merge(roleNew);
+            if (assinaturaCollectionOld != null) {
+                Collection<Assinatura> attachedAssinaturaCollectionNew = new ArrayList<Assinatura>();
+                for (Assinatura assinaturaCollectionNewAssinaturaToAttach : assinaturaCollectionNew) {
+                    assinaturaCollectionNewAssinaturaToAttach = em.getReference(assinaturaCollectionNewAssinaturaToAttach.getClass(), assinaturaCollectionNewAssinaturaToAttach.getIdAssinatura());
+                    attachedAssinaturaCollectionNew.add(assinaturaCollectionNewAssinaturaToAttach);
+                }
+                assinaturaCollectionNew = attachedAssinaturaCollectionNew;
+                user.setAssinaturaCollection(assinaturaCollectionNew);
+                Collection<Post> attachedPostCollectionNew = new ArrayList<Post>();
+                for (Post postCollectionNewPostToAttach : postCollectionNew) {
+                    postCollectionNewPostToAttach = em.getReference(postCollectionNewPostToAttach.getClass(), postCollectionNewPostToAttach.getIdPost());
+                    attachedPostCollectionNew.add(postCollectionNewPostToAttach);
+                }
+                postCollectionNew = attachedPostCollectionNew;
+                user.setPostCollection(postCollectionNew);
+                user = em.merge(user);
+                if (idRoleOld != null && !idRoleOld.equals(idRoleNew)) {
+                    idRoleOld.getUserCollection().remove(user);
+                    idRoleOld = em.merge(idRoleOld);
+                }
+                if (idRoleNew != null && !idRoleNew.equals(idRoleOld)) {
+                    idRoleNew.getUserCollection().add(user);
+                    idRoleNew = em.merge(idRoleNew);
+                }
+                for (Assinatura assinaturaCollectionOldAssinatura : assinaturaCollectionOld) {
+                    if (!assinaturaCollectionNew.contains(assinaturaCollectionOldAssinatura)) {
+                        assinaturaCollectionOldAssinatura.setIdUser(null);
+                        assinaturaCollectionOldAssinatura = em.merge(assinaturaCollectionOldAssinatura);
+                    }
+                }
+                for (Assinatura assinaturaCollectionNewAssinatura : assinaturaCollectionNew) {
+                    if (!assinaturaCollectionOld.contains(assinaturaCollectionNewAssinatura)) {
+                        User oldIdUserOfAssinaturaCollectionNewAssinatura = assinaturaCollectionNewAssinatura.getIdUser();
+                        assinaturaCollectionNewAssinatura.setIdUser(user);
+                        assinaturaCollectionNewAssinatura = em.merge(assinaturaCollectionNewAssinatura);
+                        if (oldIdUserOfAssinaturaCollectionNewAssinatura != null && !oldIdUserOfAssinaturaCollectionNewAssinatura.equals(user)) {
+                            oldIdUserOfAssinaturaCollectionNewAssinatura.getAssinaturaCollection().remove(assinaturaCollectionNewAssinatura);
+                            oldIdUserOfAssinaturaCollectionNewAssinatura = em.merge(oldIdUserOfAssinaturaCollectionNewAssinatura);
+                        }
+                    }
+                }
+                for (Post postCollectionOldPost : postCollectionOld) {
+                    if (!postCollectionNew.contains(postCollectionOldPost)) {
+                        postCollectionOldPost.setIdAuthor(null);
+                        postCollectionOldPost = em.merge(postCollectionOldPost);
+                    }
+                }
+                for (Post postCollectionNewPost : postCollectionNew) {
+                    if (!postCollectionOld.contains(postCollectionNewPost)) {
+                        User oldIdAuthorOfPostCollectionNewPost = postCollectionNewPost.getIdAuthor();
+                        postCollectionNewPost.setIdAuthor(user);
+                        postCollectionNewPost = em.merge(postCollectionNewPost);
+                        if (oldIdAuthorOfPostCollectionNewPost != null && !oldIdAuthorOfPostCollectionNewPost.equals(user)) {
+                            oldIdAuthorOfPostCollectionNewPost.getPostCollection().remove(postCollectionNewPost);
+                            oldIdAuthorOfPostCollectionNewPost = em.merge(oldIdAuthorOfPostCollectionNewPost);
+                        }
+                    }
+                }
+            } else {
+                //faz o update direto na mao aq
             }
             em.getTransaction().commit();
         } catch (Exception ex) {
             String msg = ex.getLocalizedMessage();
             if (msg == null || msg.length() == 0) {
-                Integer id = user.getIduser();
+                Integer id = user.getIdUser();
                 if (findUser(id) == null) {
                     throw new NonexistentEntityException("The user with id " + id + " no longer exists.");
                 }
@@ -101,14 +197,24 @@ public class UserJpaController implements Serializable {
             User user;
             try {
                 user = em.getReference(User.class, id);
-                user.getIduser();
+                user.getIdUser();
             } catch (EntityNotFoundException enfe) {
                 throw new NonexistentEntityException("The user with id " + id + " no longer exists.", enfe);
             }
-            Role role = user.getRole();
-            if (role != null) {
-                role.getUserCollection().remove(user);
-                role = em.merge(role);
+            Role idRole = user.getIdRole();
+            if (idRole != null) {
+                idRole.getUserCollection().remove(user);
+                idRole = em.merge(idRole);
+            }
+            Collection<Assinatura> assinaturaCollection = user.getAssinaturaCollection();
+            for (Assinatura assinaturaCollectionAssinatura : assinaturaCollection) {
+                assinaturaCollectionAssinatura.setIdUser(null);
+                assinaturaCollectionAssinatura = em.merge(assinaturaCollectionAssinatura);
+            }
+            Collection<Post> postCollection = user.getPostCollection();
+            for (Post postCollectionPost : postCollection) {
+                postCollectionPost.setIdAuthor(null);
+                postCollectionPost = em.merge(postCollectionPost);
             }
             em.remove(user);
             em.getTransaction().commit();
@@ -164,5 +270,5 @@ public class UserJpaController implements Serializable {
             em.close();
         }
     }
-    
+
 }

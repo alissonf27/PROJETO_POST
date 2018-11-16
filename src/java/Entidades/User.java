@@ -6,6 +6,7 @@
 package Entidades;
 
 import java.io.Serializable;
+import java.util.Collection;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -16,8 +17,10 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  *
@@ -28,53 +31,57 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "User.findAll", query = "SELECT u FROM User u")
-    , @NamedQuery(name = "User.findByIduser", query = "SELECT u FROM User u WHERE u.iduser = :iduser")
+    , @NamedQuery(name = "User.findByIdUser", query = "SELECT u FROM User u WHERE u.idUser = :idUser")
     , @NamedQuery(name = "User.findByName", query = "SELECT u FROM User u WHERE u.name = :name")
+    , @NamedQuery(name = "User.findByUsername", query = "SELECT u FROM User u WHERE u.username = :username")
     , @NamedQuery(name = "User.findByEmail", query = "SELECT u FROM User u WHERE u.email = :email")
-    , @NamedQuery(name = "User.findByPassword", query = "SELECT u FROM User u WHERE u.password = :password")
-    , @NamedQuery(name = "User.findByUsername", query = "SELECT u FROM User u WHERE u.username = :username")})
+    , @NamedQuery(name = "User.findByPassword", query = "SELECT u FROM User u WHERE u.password = :password")})
 public class User implements Serializable {
 
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Basic(optional = false)
-    @Column(name = "iduser")
-    private Integer iduser;
+    @Column(name = "id_user")
+    private Integer idUser;
     @Column(name = "name")
     private String name;
+    @Column(name = "username")
+    private String username;
     @Column(name = "email")
     private String email;
     @Column(name = "password")
     private String password;
-    @Column(name = "username")
-    private String username;
-    @JoinColumn(name = "role", referencedColumnName = "idrole")
+    @OneToMany(mappedBy = "idUser")
+    private Collection<Assinatura> assinaturaCollection;
+    @OneToMany(mappedBy = "idAuthor")
+    private Collection<Post> postCollection;
+    @JoinColumn(name = "id_role", referencedColumnName = "id_role")
     @ManyToOne
-    private Role role;
+    private Role idRole;
 
     public User() {
     }
     
     public User(User u){
-        iduser = u.getIduser();
+        idUser = u.getIdUser();
         name = u.getName();
         email = u.getEmail();
         password = u.getPassword();
         username = u.getUsername();
-        role = u.getRole();
+        idRole = u.getIdRole();
     }
 
-    public User(Integer iduser) {
-        this.iduser = iduser;
+    public User(Integer idUser) {
+        this.idUser = idUser;
     }
 
-    public Integer getIduser() {
-        return iduser;
+    public Integer getIdUser() {
+        return idUser;
     }
 
-    public void setIduser(Integer iduser) {
-        this.iduser = iduser;
+    public void setIdUser(Integer idUser) {
+        this.idUser = idUser;
     }
 
     public String getName() {
@@ -83,6 +90,14 @@ public class User implements Serializable {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getEmail() {
@@ -101,26 +116,36 @@ public class User implements Serializable {
         this.password = password;
     }
 
-    public String getUsername() {
-        return username;
+    @XmlTransient
+    public Collection<Assinatura> getAssinaturaCollection() {
+        return assinaturaCollection;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setAssinaturaCollection(Collection<Assinatura> assinaturaCollection) {
+        this.assinaturaCollection = assinaturaCollection;
     }
 
-    public Role getRole() {
-        return role;
+    @XmlTransient
+    public Collection<Post> getPostCollection() {
+        return postCollection;
     }
 
-    public void setRole(Role role) {
-        this.role = role;
+    public void setPostCollection(Collection<Post> postCollection) {
+        this.postCollection = postCollection;
+    }
+
+    public Role getIdRole() {
+        return idRole;
+    }
+
+    public void setIdRole(Role idRole) {
+        this.idRole = idRole;
     }
 
     @Override
     public int hashCode() {
         int hash = 0;
-        hash += (iduser != null ? iduser.hashCode() : 0);
+        hash += (idUser != null ? idUser.hashCode() : 0);
         return hash;
     }
 
@@ -131,7 +156,7 @@ public class User implements Serializable {
             return false;
         }
         User other = (User) object;
-        if ((this.iduser == null && other.iduser != null) || (this.iduser != null && !this.iduser.equals(other.iduser))) {
+        if ((this.idUser == null && other.idUser != null) || (this.idUser != null && !this.idUser.equals(other.idUser))) {
             return false;
         }
         return true;
@@ -139,7 +164,7 @@ public class User implements Serializable {
 
     @Override
     public String toString() {
-        return "Entidades.User[ iduser=" + iduser + " ]";
+        return "Entidades.User[ idUser=" + idUser + " ]";
     }
     
 }

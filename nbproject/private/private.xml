@@ -4,8 +4,7 @@
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
             <file>file:/Users/alissonfernando/NetBeansProjects/PROJETO_POST/src/java/Servlet/Servlet.java</file>
-            <file>file:/Users/alissonfernando/NetBeansProjects/PROJETO_POST/web/estilo.css</file>
-            <file>file:/Users/alissonfernando/NetBeansProjects/PROJETO_POST/src/java/Entidades/User.java</file>
+            <file>file:/Users/alissonfernando/NetBeansProjects/PROJETO_POST/src/java/Controller/UserJpaController.java</file>
         </group>
     </open-files>
 </project-private>
