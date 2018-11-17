@@ -123,10 +123,10 @@ public class Servlet extends HttpServlet {
             String confirm_senha = request.getParameter("confirm_senha");
 
             EntityManagerFactory emf = Persistence.createEntityManagerFactory("PROJETO_POSTPU");
-            UserJpaController objJpa = new UserJpaController(emf);
+            UserJpaController userJpa = new UserJpaController(emf);
             RoleJpaController roleJpa = new RoleJpaController(emf);
 
-            if (objJpa.findUserEntities().size() == 0) {
+            if (userJpa.findUserEntities().size() == 0) {
                 Role role = new Role(1);
                 role.setDescription("Admin");
                 roleJpa.create(role);
@@ -139,14 +139,24 @@ public class Servlet extends HttpServlet {
             user.setPassword(senha);
             user.setIdRole(roleJpa.findRole(1));
 
-            String result;
+            List<User> listUser = new ArrayList();
+            listUser = userJpa.findUserEntities();
+
+            String result = "";
             if (senha.equals(confirm_senha)) {
-                if (objJpa.findUser(user.getIdUser()).getEmail().equals(user.getEmail())) {
-                    result = "Usuário já cadastrado!";
-                } else {
-                    result = "Usuário cadastrado com sucesso!";
+                for (User u : listUser) {
+                    if (userJpa.findUser(u.getIdUser()).getEmail().equals(user.getEmail())) {
+                        result = "Usuário já cadastrado!";
+                        break;
+                    } else {
+                        result = "Usuário cadastrado com sucesso!";
+                    }
                 }
-                objJpa.create(user);
+                if(result.equals("Usuário cadastrado com sucesso!")){
+                    userJpa.create(user);
+                } else {
+                    result = "Erro ao cadastrar um novo usuário!";
+                }
             } else {
                 result = "Senha não confirmada!";
             }
