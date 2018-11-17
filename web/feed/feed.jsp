@@ -59,17 +59,16 @@
                 <div class="col-md-8 border-right" style="padding-top: 10px;"><br>
                     
                     <!-- Blog Post -->
-                    <%@ page import="java.util.List" %>
-                    <%@ page import="java.util.ArrayList" %>
+                    <%@ page import="java.util.List, java.util.Collections, java.util.ArrayList" %>
                     <%@ page import="Controller.PostJpaController" %>
                     <%@ page import="Entidades.Post, Entidades.Category, Entidades.User" %>
-                    <%@ page import="javax.persistence.EntityManagerFactory" %>
-                    <%@ page import="javax.persistence.Persistence" %>
+                    <%@ page import="javax.persistence.EntityManagerFactory, javax.persistence.Persistence" %>
                     <% 
                         EntityManagerFactory emf = Persistence.createEntityManagerFactory("PROJETO_POSTPU");
                         PostJpaController postJpa = new PostJpaController(emf);
                         List<Post> listPost = new ArrayList<>();
                         listPost = postJpa.findPostEntities();
+                        Collections.reverse(listPost);
                     %>
                     
                     <%for(Post p : listPost){ %>
