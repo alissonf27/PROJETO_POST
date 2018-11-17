@@ -154,7 +154,7 @@ public class Servlet extends HttpServlet {
                 }
                 if(result.equals("Usuário cadastrado com sucesso!")){
                     userJpa.create(user);
-                } else {
+                } else if(result.equals("")) {
                     result = "Erro ao cadastrar um novo usuário!";
                 }
             } else {
