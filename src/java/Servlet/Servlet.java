@@ -145,7 +145,7 @@ public class Servlet extends HttpServlet {
             String result = "";
             if (senha.equals(confirm_senha)) {
                 for (User u : listUser) {
-                    if (userJpa.findUser(u.getIdUser()).getEmail().equals(user.getEmail())) {
+                    if (userJpa.findUser(u.getIdUser()).getEmail().equals(user.getEmail())) {//o erro estava aqui
                         result = "Usuário já cadastrado!";
                         break;
                     } else {
